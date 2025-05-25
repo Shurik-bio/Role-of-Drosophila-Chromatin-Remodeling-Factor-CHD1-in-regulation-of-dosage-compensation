@@ -4,12 +4,12 @@
 - Egor Kulikov, 
 Head of the Laboratory of Applied Genetics and Molecular Diagnostics, FSC ARRTPI
 
-- Aleksandra Mikhailova 
+- Aleksandra Mikhailova, 
 Scientific Researcher, Lab of Postgenomic Investigation, VIR
 
 **Supervisor:**
 
-- Aleksandr Konev
+- Aleksandr Konev,
 PhD, Senior Researcher, Group of Genetic Studies Chromatin and Reparation,
 Petersburg Nuclear Physics Institute named by B.P.Konstantinov of NRC «Kurchatov Institute»
 
