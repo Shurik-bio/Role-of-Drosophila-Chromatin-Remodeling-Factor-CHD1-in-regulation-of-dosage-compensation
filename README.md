@@ -51,6 +51,285 @@ Our workflow includes following steps:
 
 #### *Analysis the raw RNA-sequenced data* 
 
+This analysis includes the following steps for processing and analyzing RNA-seq data from **Drosophila melanogaster**:
+
+- Adapter trimming and filtering of low-quality reads  
+- Quality control before and after rRNA removal  
+- rRNA removal  
+- Mapping to the genome with annotation  
+- Read counting over genes  
+- Differential expression analysis (DESeq2)  
+- Dosage compensation analysis focusing on chromosome X vs autosomes (Python)
+
+Tools Used
+
+- Trimmomatic v0.39
+- FastQC v0.12.1
+- Bowtie2 v2.4.1
+- STAR v2.7.10b
+- featureCounts v2.0.1
+- DESeq2 v1.48.0 (R)
+- Python v3.11.9
+
+---
+
+Analysis Steps
+
+1. Adapter Trimming and Quality Filtering
+
+```bash
+trimmomatic PE -threads 32 \
+  V350198475_unit_104_1.fq V350198475_unit_104_2.fq \
+  trimmed_V350198475_unit_104_1.fq V350198475_unit_104_1_unpaired.fq \
+  trimmed_V350198475_unit_104_2.fq V350198475_unit_104_2_unpaired.fq \
+  ILLUMINACLIP:adapter_sequence.fa:2:30:10 SLIDINGWINDOW:4:20 LEADING:20 TRAILING:20
+```
+
+2. Quality Control
+
+```bash
+fastqc trimmed_V350198475_unit_104_1.fq trimmed_V350198475_unit_104_2.fq
+fastqc trimmed_104_1_unmapped.fq trimmed_104_2_unmapped.fq
+```
+
+> Initial QC showed more than 50% of libraries consisted of duplicates, indicating the presence of large amounts of rRNA. Other quality metrics were acceptable, so rRNA removal was performed before proceeding.
+
+---
+
+3. rRNA Filtering with Bowtie2
+
+Preparation of reference rRNA
+
+```bash
+cat 18S.fasta 28S.fasta > ref_rRNA.fasta
+```
+
+Indexing and filtering of rRNA
+
+```bash
+bowtie2-build ref_rRNA.fasta ref_rRNA_index
+bowtie2 -x ref_rRNA_index \
+  -1 trimmed_V350198475_unit_104_1.fq -2 trimmed_V350198475_unit_104_2.fq \
+  --un-conc trimmed_104_%_unmapped.fq \
+  -S aligned_104.sam -p 32
+```
+
+---
+
+4. Mapping to the genome
+
+Index creation
+
+```bash
+STAR --runThreadN 32 --runMode genomeGenerate \
+  --genomeDir ./STAR_index \
+  --genomeFastaFiles genomic.fasta \
+  --sjdbGTFfile genomic.gtf \
+  --sjdbOverhang 99 \
+  --genomeSAindexNbases 12
+```
+
+Mapping
+
+```bash
+STAR --runThreadN 32 --runMode alignReads \
+  --genomeDir ./STAR_index \
+  --readFilesIn trimmed_104_1_unmapped.fq trimmed_104_2_unmapped.fq \
+  --outFileNamePrefix output_STAR_104_new \
+  --outSAMtype BAM SortedByCoordinate \
+  --sjdbGTFfile genomic.gtf \
+  --sjdbOverhang 99 \
+  --outFilterType BySJout \
+  --outFilterMultimapNmax 20
+```
+
+---
+
+5. Expression counting
+
+```bash
+featureCounts -T 32 -g gene_id -a genomic.gtf -o counts_STAR_new.txt -p \
+  output_STAR_97_new.bam output_STAR_98_new.bam output_STAR_99_new.bam \
+  output_STAR_100_new.bam output_STAR_101_new.bam output_STAR_102_new.bam \
+  output_STAR_103_new.bam output_STAR_104_new.bam
+```
+
+Simplifying the table
+
+```bash
+cat counts_STAR_new.txt | cut -f 1,7-14 > simple_counts_STAR_new.txt
+```
+
+#### Dosage Compensation Analysis in Drosophila (Housekeeping Genes)
+
+This repository documents the logic and flow of a Python script developed to analyze dosage compensation in *Drosophila melanogaster*, specifically focusing on housekeeping genes (HK genes). The analysis compares expression levels on chromosome X and autosomes between wild-type and CHD1 mutant samples, separately for males and females.
+
+---
+
+Data Input
+
+The script operates on three main inputs:
+
+```python
+GTF_PATH = "./genomic.gtf"
+COUNTS_PATH = "./filtered_counts.txt"
+GENE_INFO_PATH = "./List_of_genes_with_gene_id.csv"
+```
+
+* **GTF Annotation File**: Contains gene models used to calculate gene lengths from exon coordinates.
+* **Raw Count Matrix**: Output from `featureCounts`, containing read counts per gene and sample.
+* **Housekeeping Genes List**: A CSV file mapping `gene_id` to gene name and chromosome location.
+
+---
+
+1. **Gene Length Calculation**
+
+```python
+def parse_gtf_lengths(gtf_file):
+    gene_lengths = defaultdict(int)
+    with open(gtf_file) as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            fields = line.strip().split("\t")
+            if fields[2] != "exon":
+                continue
+            start, end = int(fields[3]), int(fields[4])
+            info = fields[8]
+            gene_id = [s.split('"')[1] for s in info.split(';') if 'gene_id' in s][0]
+            gene_lengths[gene_id] += (end - start + 1)
+    return pd.DataFrame(gene_lengths.items(), columns=['gene_id', 'length'])
+```
+
+Used to compute gene lengths from exon spans, which are needed for TPM normalization.
+
+2. **Loading and Preprocessing Raw Counts**
+
+```python
+counts = pd.DataFrame([line.split() for line in data_lines], columns=['gene_id'] + ALL_SAMPLES)
+counts[ALL_SAMPLES] = counts[ALL_SAMPLES].astype(int)
+```
+
+Filters and parses count data, keeping only housekeeping genes.
+
+3. **TPM Normalization**
+
+```python
+def counts_to_tpm(df, sample_cols):
+    tpm_df = df[['gene_id']].copy()
+    for sample in sample_cols:
+        rpk = df[sample] / df['length']
+        tpm_df[sample] = rpk / (rpk.sum() / 1e6)
+    return tpm_df
+```
+
+Counts are normalized to TPM (Transcripts Per Million) per sample.
+
+4. **Sample Grouping**
+
+```python
+GROUPS = {
+    'male': ['mOregon_1', 'mOregon_2', 'mCHD1_1', 'mCHD1_2'],
+    'female': ['fOregon_1', 'fOregon_2', 'fCHD1_1', 'fCHD1_2']
+}
+```
+
+Each sex has wild-type and CHD1 mutant samples in biological duplicates.
+
+5. **Sex-Specific Analysis**
+
+```python
+def process_sex(tpm, sex, gene_lengths, hk_genes):
+    samples = GROUPS[sex]
+    cond_samples = [s for s in samples if 'CHD1' in s]
+    control_samples = [s for s in samples if 'Oregon' in s]
+
+    tpm_sex = tpm[(tpm[samples] > 1).all(axis=1)].copy()
+    tpm_sex[f'{sex}_CHD1_mean'] = tpm_sex[cond_samples].mean(axis=1)
+    tpm_sex[f'{sex}_Oregon_mean'] = tpm_sex[control_samples].mean(axis=1)
+    tpm_sex['log2FC'] = np.log2(tpm_sex[f'{sex}_CHD1_mean'] / tpm_sex[f'{sex}_Oregon_mean'])
+
+    tpm_sex['log2FC_centered'] = tpm_sex['log2FC'] - tpm_sex['log2FC'].mean()
+    tpm_sex = tpm_sex[(tpm_sex['log2FC_centered'] >= -1) & (tpm_sex['log2FC_centered'] <= 1)]
+
+    annotated = pd.merge(tpm_sex, hk_genes[['gene_id', 'Gene name', 'Chr']], on='gene_id', how='left')
+    annotated['Sex'] = sex.capitalize()
+    return annotated
+```
+
+Filters for expressed genes (TPM > 1), calculates log2 fold change and centers it, then merges with chromosome data.
+
+6. **Visualization**
+
+```python
+def plot_box_density(data, sex, suffix):
+    chrX = data[data['Chr'] == 'X']['log2FC_centered']
+    autosomes = data[data['Chr'] != 'X']['log2FC_centered']
+
+    # Boxplot
+    plt.boxplot([chrX.dropna(), autosomes.dropna()], tick_labels=['chrX', 'Autosomes'])
+    ...
+
+    # KDE plot
+    sns.kdeplot(chrX, label='chrX', ...)
+    sns.kdeplot(autosomes, label='Autosomes', ...)
+```
+
+Creates boxplots and KDE plots to compare chrX and autosomes per sex.
+
+7. **Statistical Testing**
+
+```python
+stat, pval = mannwhitneyu(chrX_vals, autosome_vals, alternative='two-sided')
+```
+
+Uses Mann–Whitney U test to check for significant differences in distributions.
+
+8. **Export of Filtered and Ranked Results**
+
+```python
+annotated[['Gene name', 'log2FC_centered']].rename(...).sort_values(...).to_csv(...)
+```
+
+Saves filtered and sorted HK gene expression data.
+
+---
+
+Final Comparison by Sex and Chromosome Type
+
+```python
+combined = pd.concat(results)
+combined['ChrType'] = combined['Chr'].apply(lambda x: 'chrX' if x == 'X' else 'Autosomes')
+```
+
+The full dataset is split by `ChrType` and sex to allow inter-sex comparisons.
+
+KDE and Boxplot per Sex and Chromosome
+
+```python
+sns.kdeplot(data=chr_data, x='log2FC_centered', hue='Sex', ...)
+sns.boxplot(data=combined, x='ChrType', y='log2FC_centered', hue='Sex')
+```
+
+Generates summary visualizations across sexes and chromosomes.
+
+---
+
+Output Summary
+
+* PNG figures for all plot types
+* CSVs for centered log2FC housekeeping genes per sex
+* p-values printed in console for statistical context
+
+---
+
+Key Takeaways
+
+* TPM normalization and filtering improve signal reliability
+* log2FC centering highlights relative differences
+* Statistical testing confirms expression trends
+* Housekeeping genes serve as effective controls in dosage compensation analysis
+
 
 #### *Visualization and analysis of mapped reads in RStudio* 
 
@@ -405,6 +684,18 @@ Additionally we conducted a functional analysis of statistically overrepresented
 
 In case the comparison group of mutant individuals for both sexes we revealed genes associated with dosage compensation by hyperactivation of X chromosome, sex chromosome dosage compensation, epigenetic regulation of gene expression, chromatin remodeling and chromatin organization.
 
+A separate focus of the analysis of dose compensation was on housekeeping genes, which are characterized by stable expression. The distributions of centered log2FC between the X chromosome and autosomes were compared, separately for males and females.
+In males, a statistically significant leftward shift of the log2FC distribution for X-chromosome genes compared to autosomal genes was observed. The median value of centered log2FC was -0.13 for X-chromosome and -0.04 for autosomes. This indicates a decreased expression of X-chromosome genes in males in the CHD1 mutant line compared to controls, while the expression of autosomal genes remained close to the median.
+
+![density_male](Figures/density_male.png)
+
+In contrast, in females, the distributions for the X chromosome and autosomes were almost identical (medians -0.03 and 0.00, respectively), indicating that there was no significant effect of the CHD1 mutation on the expression of X-linked genes in females.
+
+![density_female](Figures/density_female.png)
+
+These results suggest a possible role of CHD1 in the maintenance of dose compensation in Drosophila melanogaster males. The downward shift of X-chromosome gene expression in males while it is absent in females may indicate a gender-specific function of CHD1, presumably related to chromatin-remodeling mechanisms. Given that only housekeeping genes known for their stable expression were included in the analysis, we can conclude that the shifts detected are reliable and not related to the overall variation in expression.
+
+![boxplot_log2FC](Figures/boxplot_log2FC.png)
 
 ### Conclusions
 
