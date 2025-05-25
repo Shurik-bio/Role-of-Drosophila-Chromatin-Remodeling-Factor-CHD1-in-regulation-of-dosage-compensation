@@ -1,4 +1,4 @@
-# Role-of-Drosophila-Chromatin-Remodeling-Factor-CHD1-in-regulation-of-dosage-compensation
+# Role of *Drosophila* Chromatin Remodeling Factor CHD1 in regulation of Dosage compensation
 
 **Students:**
 - Egor Kulikov, 
