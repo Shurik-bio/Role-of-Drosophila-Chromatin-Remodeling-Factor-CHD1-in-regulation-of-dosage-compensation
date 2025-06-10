@@ -5,7 +5,7 @@
 Head of the Laboratory of Applied Genetics and Molecular Diagnostics, FSC ARRTPI
 
 - Aleksandra Mikhailova, 
-Scientific Researcher, Lab of Postgenomic Investigation, VIR
+Scientific Researcher in Lab of Postgenomic Investigation, VIR
 
 **Supervisor:**
 
