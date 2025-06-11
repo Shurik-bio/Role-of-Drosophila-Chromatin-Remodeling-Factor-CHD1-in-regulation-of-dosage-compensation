@@ -672,6 +672,8 @@ Additionally we conducted a functional analysis of statistically overrepresented
 
 ![GO_down](Figures/GO_down.png)
 
+*for more details please see 'GO-figures' folder
+
 In case the comparison group of mutant individuals for both sexes we revealed genes associated with dosage compensation by hyperactivation of X chromosome, sex chromosome dosage compensation, epigenetic regulation of gene expression, chromatin remodeling and chromatin organization.
 
 A separate focus of the analysis of dose compensation was on housekeeping genes, which are characterized by stable expression. The distributions of centered log2FC between the X chromosome and autosomes were compared, separately for males and females.
