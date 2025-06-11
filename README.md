@@ -5,7 +5,7 @@
 Head of the Laboratory of Applied Genetics and Molecular Diagnostics, FSC ARRTPI
 
 - Aleksandra Mikhailova, 
-Scientific Researcher, Lab of Postgenomic Investigation, VIR
+Scientific Researcher in Lab of Postgenomic Investigation, VIR
 
 **Supervisor:**
 
@@ -644,16 +644,6 @@ Mean quality scores, adapter content, N content per base:
 GC-content per sequence:
 
 ![Fastqc](Figures/fastqc_2.png)
-
-
-For more detailed infromation conserning FastQC report, please, click on the following links: 
-- [Before trimming](file:///C:/Users/mikha/Desktop/BI/Additional_project/FastQC_report/V350198475_unit_97_1_fastqc%20(1).html)
-- [After trimming](file:///C:/Users/mikha/Desktop/BI/Additional_project/FastQC_report/trimmed_V350198475_unit_97_1_fastqc.html)
-
-To facilitate the joint analysis we combined the FASTQC reports with the MultiQC program v1.29 [5].
-[MultiQC report](file:///C:/Users/mikha/Desktop/BI/Additional_project/FastQC_report/multiqc_report%20(2).html) after trimming 
-
-
 
 Correlation analysis data and Pearson correlation results (table 1 and 2, respectively):
 
