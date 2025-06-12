@@ -183,8 +183,10 @@ python Analysis_in_Python.py
 Make sure the following input files are available and correctly referenced in the script:
 - `genomic.gtf`: genome annotation file  
 - `filtered_counts.txt`: raw gene count matrix
+
 ![filtered_counts](Figures/filtered_counts.PNG)
 - `List_of_genes_with_gene_id.csv`: housekeeping gene information
+
 ![List_of_gebes_with_gene_id](Figures/List_of_genes_with_gene_id.PNG)
 
 Output figures and tables will be saved in the current directory.
