@@ -185,7 +185,7 @@ Make sure the following input files are available and correctly referenced in th
 - `filtered_counts.txt`: raw gene count matrix
 ![filtered_counts](Figures/filtered_counts.png)
 - `List_of_genes_with_gene_id.csv`: housekeeping gene information
-![List_of_gebes_with_gene_id](Figures/List_of_gebes_with_gene_id.png)
+![List_of_gebes_with_gene_id](Figures/List_of_genes_with_gene_id.png)
 
 Output figures and tables will be saved in the current directory.
 
