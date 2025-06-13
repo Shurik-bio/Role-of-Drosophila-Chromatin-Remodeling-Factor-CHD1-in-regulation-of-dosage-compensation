@@ -695,13 +695,13 @@ The DEGs with `FDR < 0.05` amounted in overall 667, among them 249 were upregula
 
 Additionally we conducted a functional analysis of statistically overrepresented GO terms by the GO enrichment analysis to associate a set of genes with a phenotype:
 
-![GO_up1](Figures/GO_1.png)
+![GO_up1](Figures/GO_1.jpg)
 
-![GO_up2](Figures/GO_2.png)
+![GO_up2](Figures/GO_2.jpg)
 
-![GO_down3](Figures/GO_3.png)
+![GO_down3](Figures/GO_3.jpg)
 
-![GO_down4](Figures/GO_4.png)
+![GO_down4](Figures/GO_4.jpg)
 
 *for more details please see 'Figures' folder
 
