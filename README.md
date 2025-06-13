@@ -164,6 +164,33 @@ cat counts_STAR_new.txt | cut -f 1,7-14 > simple_counts_STAR_new.txt
 
 This repository documents the logic and flow of a Python script developed to analyze dosage compensation in *Drosophila melanogaster*, specifically focusing on housekeeping genes (HK genes). The analysis compares expression levels on chromosome X and autosomes between wild-type and CHD1 mutant samples, separately for males and females.
 
+The file [`Analysis_in_Python.py`](./Analysis_in_Python.py) contains the full pipeline, including:
+
+- TPM normalization of raw counts  
+- Filtering based on expression threshold  
+- log2 fold change computation between mutant and wild-type groups  
+- Comparison of expression levels between chrX and autosomes  
+- Mann–Whitney U statistical testing  
+- Visualization: boxplots and KDE density plots  
+- Export of sorted results to CSV
+
+To run the script:
+
+```bash
+python Analysis_in_Python.py
+```
+
+Make sure the following input files are available and correctly referenced in the script:
+- `genomic.gtf`: genome annotation file  
+- `filtered_counts.txt`: raw gene count matrix
+
+![filtered_counts](Figures/filtered_counts.PNG)
+- `List_of_genes_with_gene_id.csv`: housekeeping gene information
+
+![List_of_gebes_with_gene_id](Figures/List_of_genes_with_gene_id.PNG)
+
+Output figures and tables will be saved in the current directory.
+
 ---
 
 Data Input
@@ -671,6 +698,8 @@ Additionally we conducted a functional analysis of statistically overrepresented
 ![GO_up](Figures/GO_up.png)
 
 ![GO_down](Figures/GO_down.png)
+
+*for more details please see 'GO-figures' folder
 
 In case the comparison group of mutant individuals for both sexes we revealed genes associated with dosage compensation by hyperactivation of X chromosome, sex chromosome dosage compensation, epigenetic regulation of gene expression, chromatin remodeling and chromatin organization.
 
