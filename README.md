@@ -695,11 +695,15 @@ The DEGs with `FDR < 0.05` amounted in overall 667, among them 249 were upregula
 
 Additionally we conducted a functional analysis of statistically overrepresented GO terms by the GO enrichment analysis to associate a set of genes with a phenotype:
 
-![GO_up](Figures/GO_up.png)
+![GO_up1](Figures/GO_1.png)
 
-![GO_down](Figures/GO_down.png)
+![GO_up2](Figures/GO_2.png)
 
-*for more details please see 'GO-figures' folder
+![GO_down3](Figures/GO_3.png)
+
+![GO_down4](Figures/GO_4.png)
+
+*for more details please see 'Figures' folder
 
 In case the comparison group of mutant individuals for both sexes we revealed genes associated with dosage compensation by hyperactivation of X chromosome, sex chromosome dosage compensation, epigenetic regulation of gene expression, chromatin remodeling and chromatin organization.
 
